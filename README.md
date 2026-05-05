@@ -23,26 +23,44 @@ A web application for managing and visualising the structure of organisations �
 
 ## Getting started
 
-### Prerequisites
+### Docker (recommended)
 
-- Node.js ≥ 18
+Requires Docker with the Compose plugin.
 
-### Install dependencies
+```bash
+docker compose up --build
+```
+
+Open **http://localhost** in your browser. The SQLite database is stored in a named Docker volume (`db-data`) and persists across restarts.
+
+```bash
+# Run in background
+docker compose up --build -d
+
+# View logs
+docker compose logs -f
+
+# Stop
+docker compose down
+
+# Stop and delete database volume
+docker compose down -v
+```
+
+### Local development
+
+Requires Node.js ≥ 18.
 
 ```bash
 cd backend && npm install
 cd ../frontend && npm install
-```
 
-### Run
-
-```bash
 # Start both servers together
 ./start.sh
 
 # Or separately:
-cd backend && node server.js        # API on http://localhost:3001
-cd frontend && npm run dev -- --port 3000   # UI on http://localhost:3000
+cd backend && node server.js              # API on http://localhost:3001
+cd frontend && npm run dev -- --port 3000 # UI on http://localhost:3000
 ```
 
 Open **http://localhost:3000** in your browser.

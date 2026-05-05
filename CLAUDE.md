@@ -29,6 +29,11 @@ Lint frontend:
 cd frontend && npm run lint
 ```
 
+Build and run with Docker Compose:
+```bash
+docker compose up --build
+```
+
 There are no automated tests. Verify API behaviour with curl against `http://localhost:3001/api`.
 
 ## Architecture
@@ -37,7 +42,7 @@ There are no automated tests. Verify API behaviour with curl against `http://loc
 
 Express + SQLite (via the `sqlite` async wrapper over `sqlite3`). A single `database.js` opens the DB on first call and returns a cached handle via `getDb()`. All routes are async and `await getDb()` at the top of each handler — there is no connection pool.
 
-Schema lives entirely in `database.js`. New columns are added with a `try/catch ALTER TABLE` migration block after the `CREATE TABLE IF NOT EXISTS` statements — this is the established pattern for migrations.
+Schema lives entirely in `database.js`. New columns are added with a `try/catch ALTER TABLE` migration block after the `CREATE TABLE IF NOT EXISTS` statements — this is the established pattern for migrations. The DB path is controlled by the `DB_PATH` env var (defaults to `org_structure.db` beside `database.js`); in Docker it is set to `/data/org_structure.db` on a named volume.
 
 Route modules under `routes/` map 1-to-1 with entities:
 - `organizations.js` — CRUD only
@@ -65,6 +70,6 @@ Four edge types are visually distinct by colour and dash style: hierarchy (grey 
 
 **`SearchableSelect`** (`components/SearchableSelect.jsx`) is a controlled dropdown with live keyword filtering. Used in `RelationModal` for department and person pickers. Accepts `options: [{value, label}]`, `value`, `onChange`, `placeholder`, and optional `emptyLabel` for a "none" option.
 
-**API client** (`src/api/index.js`) exports four objects (`orgApi`, `deptApi`, `personApi`, `relationApi`), each a thin axios wrapper. The base URL is hardcoded to `http://localhost:3001/api`.
+**API client** (`src/api/index.js`) exports four objects (`orgApi`, `deptApi`, `personApi`, `relationApi`), each a thin axios wrapper. The base URL comes from `VITE_API_BASE_URL` (set to `http://localhost:3001/api` in `frontend/.env` for local dev; set to `/api` at Docker build time so nginx can proxy it).
 
 Node drag positions are persisted via debounced `PATCH /:id/position` calls (500 ms timer per node, stored in a `useRef` map to avoid stale closures).

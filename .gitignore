@@ -12,8 +12,7 @@ node_modules/
 dist/
 build/
 
-# Environment files
-.env
+# Environment files — commit .env (public defaults only), ignore secrets
 .env.local
 .env.*.local
 

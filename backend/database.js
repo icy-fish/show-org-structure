@@ -7,7 +7,7 @@ let db;
 async function getDb() {
   if (db) return db;
   db = await open({
-    filename: path.join(__dirname, 'org_structure.db'),
+    filename: process.env.DB_PATH || path.join(__dirname, 'org_structure.db'),
     driver: sqlite3.Database,
   });
   await db.exec('PRAGMA foreign_keys = ON');
