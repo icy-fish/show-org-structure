@@ -21,16 +21,44 @@ import { deptApi, personApi, relationApi } from '../api';
 
 const nodeTypes = { department: DeptNode, person: PersonNode };
 
-const DEPT_COLORS = ['#4f8ef7', '#6c63ff', '#2cb67d', '#f7a440', '#e05c7e', '#00b4d8'];
+const DEPT_COLORS = ['#4f8ef7', '#6c63ff', '#2cb67d', '#f7a440', '#e05c7e', '#00b4d8', '#8b5cf6', '#06b6d4'];
+
+function buildColorMap(departments) {
+  // Top-level depts each get their own unique color.
+  // All children sharing the same parent get the same color (one color per sibling group).
+  const colorMap = {};
+  let colorIdx = 0;
+
+  const topLevel = departments.filter(d => !d.parent_dept_id);
+  topLevel.forEach(d => {
+    colorMap[d.id] = DEPT_COLORS[colorIdx++ % DEPT_COLORS.length];
+  });
+
+  // Group children by parent
+  const byParent = {};
+  departments.filter(d => d.parent_dept_id).forEach(d => {
+    if (!byParent[d.parent_dept_id]) byParent[d.parent_dept_id] = [];
+    byParent[d.parent_dept_id].push(d);
+  });
+
+  Object.values(byParent).forEach(siblings => {
+    const color = DEPT_COLORS[colorIdx++ % DEPT_COLORS.length];
+    siblings.forEach(d => { colorMap[d.id] = color; });
+  });
+
+  return colorMap;
+}
 
 function buildNodes(departments, persons) {
+  const colorMap = buildColorMap(departments);
+
   const deptNodes = departments.map((d, i) => ({
     id: `dept-${d.id}`,
     type: 'department',
     position: { x: d.pos_x || (i % 4) * 260 + 80, y: d.pos_y || Math.floor(i / 4) * 180 + 80 },
     data: {
       dept: d,
-      color: DEPT_COLORS[i % DEPT_COLORS.length],
+      color: colorMap[d.id] || DEPT_COLORS[0],
     },
   }));
 

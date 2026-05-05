@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
+import SearchableSelect from '../SearchableSelect';
 
 export default function RelationModal({ relation, departments, persons, mode, onSave, onClose }) {
-  // mode: 'dept-relation' | 'person-report'
   const [fromId, setFromId] = useState('');
   const [toId, setToId] = useState('');
   const [label, setLabel] = useState('');
@@ -9,8 +9,8 @@ export default function RelationModal({ relation, departments, persons, mode, on
 
   useEffect(() => {
     if (relation) {
-      setFromId(relation.from_dept_id || relation.person_id || '');
-      setToId(relation.to_dept_id || relation.reports_to_id || '');
+      setFromId(String(relation.from_dept_id || relation.person_id || ''));
+      setToId(String(relation.to_dept_id || relation.reports_to_id || ''));
       setLabel(relation.label || '');
       setRelationType(relation.relation_type || 'custom');
     }
@@ -26,26 +26,42 @@ export default function RelationModal({ relation, departments, persons, mode, on
     }
   };
 
-  const items = mode === 'dept-relation' ? departments : persons;
-  const fromLabel = mode === 'dept-relation' ? 'From Department' : 'Person';
-  const toLabel = mode === 'dept-relation' ? 'To Department' : 'Reports To';
+  const isDept = mode === 'dept-relation';
+  const items = isDept ? departments : persons;
+  const toItems = items.filter(i => String(i.id) !== fromId);
+
+  const toOptions = toItems.map(i => ({
+    value: String(i.id),
+    label: isDept ? i.name : `${i.name}${i.title ? ` — ${i.title}` : ''}`,
+  }));
+
+  const fromOptions = items.map(i => ({
+    value: String(i.id),
+    label: isDept ? i.name : `${i.name}${i.title ? ` — ${i.title}` : ''}`,
+  }));
 
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal" onClick={e => e.stopPropagation()}>
-        <h3>{mode === 'dept-relation' ? 'Department Relation' : 'Reporting Relation'}</h3>
+        <h3>{isDept ? 'Add Department Relation' : 'Add Reporting Relation'}</h3>
         <form onSubmit={handleSubmit}>
-          <label>{fromLabel} *</label>
-          <select value={fromId} onChange={e => setFromId(e.target.value)} required>
-            <option value="">Select...</option>
-            {items.map(i => <option key={i.id} value={i.id}>{i.name}</option>)}
-          </select>
-          <label>{toLabel} *</label>
-          <select value={toId} onChange={e => setToId(e.target.value)} required>
-            <option value="">Select...</option>
-            {items.filter(i => i.id !== parseInt(fromId)).map(i => <option key={i.id} value={i.id}>{i.name}</option>)}
-          </select>
-          {mode === 'dept-relation' && (
+          <label>{isDept ? 'From Department' : 'Person'} *</label>
+          <SearchableSelect
+            options={fromOptions}
+            value={fromId}
+            onChange={setFromId}
+            placeholder={isDept ? 'Select department...' : 'Select person...'}
+          />
+
+          <label>{isDept ? 'To Department' : 'Reports To'} *</label>
+          <SearchableSelect
+            options={toOptions}
+            value={toId}
+            onChange={setToId}
+            placeholder={isDept ? 'Select department...' : 'Select person...'}
+          />
+
+          {isDept && (
             <>
               <label>Label</label>
               <input value={label} onChange={e => setLabel(e.target.value)} placeholder="Relation label (optional)" />
@@ -59,9 +75,12 @@ export default function RelationModal({ relation, departments, persons, mode, on
               </select>
             </>
           )}
+
           <div className="modal-actions">
             <button type="button" onClick={onClose} className="btn-secondary">Cancel</button>
-            <button type="submit" className="btn-primary">Add Relation</button>
+            <button type="submit" className="btn-primary" disabled={!fromId || !toId}>
+              Add Relation
+            </button>
           </div>
         </form>
       </div>

@@ -61,6 +61,8 @@ async function getDb() {
       FOREIGN KEY (reports_to_id) REFERENCES persons(id) ON DELETE CASCADE
     );
   `);
+  // Migrate: add description column to persons if it doesn't exist yet
+  try { await db.exec('ALTER TABLE persons ADD COLUMN description TEXT'); } catch (_) {}
   return db;
 }
 

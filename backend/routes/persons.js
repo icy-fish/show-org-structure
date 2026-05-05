@@ -29,26 +29,26 @@ router.get('/org/:orgId', async (req, res) => {
 });
 
 router.post('/', async (req, res) => {
-  const { org_id, dept_id, name, title, email, pos_x, pos_y } = req.body;
+  const { org_id, dept_id, name, title, email, description, pos_x, pos_y } = req.body;
   if (!org_id || !name) return res.status(400).json({ error: 'org_id and name are required' });
   const db = await getDb();
   const result = await db.run(
-    'INSERT INTO persons (org_id, dept_id, name, title, email, pos_x, pos_y) VALUES (?, ?, ?, ?, ?, ?, ?)',
-    org_id, dept_id || null, name, title || null, email || null, pos_x || 0, pos_y || 0
+    'INSERT INTO persons (org_id, dept_id, name, title, email, description, pos_x, pos_y) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+    org_id, dept_id || null, name, title || null, email || null, description || null, pos_x || 0, pos_y || 0
   );
-  res.status(201).json({ id: result.lastID, org_id, dept_id, name, title, email, pos_x: pos_x || 0, pos_y: pos_y || 0, reports_to: [] });
+  res.status(201).json({ id: result.lastID, org_id, dept_id, name, title, email, description, pos_x: pos_x || 0, pos_y: pos_y || 0, reports_to: [] });
 });
 
 router.put('/:id', async (req, res) => {
-  const { dept_id, name, title, email, pos_x, pos_y } = req.body;
+  const { dept_id, name, title, email, description, pos_x, pos_y } = req.body;
   if (!name) return res.status(400).json({ error: 'Name is required' });
   const db = await getDb();
   const result = await db.run(
-    'UPDATE persons SET dept_id = ?, name = ?, title = ?, email = ?, pos_x = ?, pos_y = ? WHERE id = ?',
-    dept_id || null, name, title || null, email || null, pos_x || 0, pos_y || 0, req.params.id
+    'UPDATE persons SET dept_id = ?, name = ?, title = ?, email = ?, description = ?, pos_x = ?, pos_y = ? WHERE id = ?',
+    dept_id || null, name, title || null, email || null, description || null, pos_x || 0, pos_y || 0, req.params.id
   );
   if (result.changes === 0) return res.status(404).json({ error: 'Person not found' });
-  res.json({ id: parseInt(req.params.id), dept_id, name, title, email, pos_x, pos_y });
+  res.json({ id: parseInt(req.params.id), dept_id, name, title, email, description, pos_x, pos_y });
 });
 
 router.patch('/:id/position', async (req, res) => {

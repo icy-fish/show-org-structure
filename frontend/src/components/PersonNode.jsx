@@ -13,6 +13,7 @@ export default function PersonNode({ data }) {
       <div className="person-info">
         <div className="person-name">{person.name}</div>
         {person.title && <div className="person-title">{person.title}</div>}
+        {person.description && <div className="person-desc">{person.description}</div>}
         {person.dept_name && <div className="person-dept">📂 {person.dept_name}</div>}
         {person.email && <div className="person-email">✉ {person.email}</div>}
       </div>

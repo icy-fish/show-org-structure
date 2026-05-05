@@ -4,6 +4,7 @@ export default function PersonModal({ person, departments, orgId, onSave, onClos
   const [name, setName] = useState('');
   const [title, setTitle] = useState('');
   const [email, setEmail] = useState('');
+  const [description, setDescription] = useState('');
   const [deptId, setDeptId] = useState('');
 
   useEffect(() => {
@@ -11,6 +12,7 @@ export default function PersonModal({ person, departments, orgId, onSave, onClos
       setName(person.name);
       setTitle(person.title || '');
       setEmail(person.email || '');
+      setDescription(person.description || '');
       setDeptId(person.dept_id || '');
     }
   }, [person]);
@@ -23,6 +25,7 @@ export default function PersonModal({ person, departments, orgId, onSave, onClos
       name: name.trim(),
       title: title.trim() || null,
       email: email.trim() || null,
+      description: description.trim() || null,
       dept_id: deptId || null,
     });
   };
@@ -38,6 +41,8 @@ export default function PersonModal({ person, departments, orgId, onSave, onClos
           <input value={title} onChange={e => setTitle(e.target.value)} placeholder="Job title (optional)" />
           <label>Email</label>
           <input value={email} onChange={e => setEmail(e.target.value)} placeholder="Email (optional)" type="email" />
+          <label>Description</label>
+          <textarea value={description} onChange={e => setDescription(e.target.value)} placeholder="Brief description or bio (optional)" rows={2} />
           <label>Department</label>
           <select value={deptId} onChange={e => setDeptId(e.target.value)}>
             <option value="">No department</option>

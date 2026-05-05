@@ -5,7 +5,7 @@ const { getDb } = require('../database');
 router.get('/org/:orgId', async (req, res) => {
   const db = await getDb();
   const depts = await db.all(`
-    SELECT d.*, p.name as owner_name, p.title as owner_title
+    SELECT d.*, p.name as owner_name, p.title as owner_title, p.email as owner_email, p.description as owner_description
     FROM departments d
     LEFT JOIN persons p ON d.owner_id = p.id
     WHERE d.org_id = ?
