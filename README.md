@@ -31,11 +31,17 @@ Requires Docker with the Compose plugin.
 docker compose up --build
 ```
 
-Open **http://localhost** in your browser. The SQLite database is stored in a named Docker volume (`db-data`) and persists across restarts.
+Open **http://localhost** in your browser. nginx serves the frontend and proxies all `/api` traffic to the backend container internally, so no hostname configuration is needed — it works the same whether accessed from `localhost`, a LAN IP, or a public domain.
+
+The SQLite database is stored in a named Docker volume (`db-data`) and persists across restarts.
 
 ```bash
 # Run in background
 docker compose up --build -d
+
+# Change the external port (e.g. to avoid conflict with another service on port 80)
+HOST_PORT=8080 docker compose up --build -d
+# or: copy .env.example → .env and set HOST_PORT=8080
 
 # View logs
 docker compose logs -f
@@ -54,16 +60,26 @@ Requires Node.js ≥ 18.
 ```bash
 cd backend && npm install
 cd ../frontend && npm install
-
-# Start both servers together
-./start.sh
-
-# Or separately:
-cd backend && node server.js              # API on http://localhost:3001
-cd frontend && npm run dev -- --port 3000 # UI on http://localhost:3000
 ```
 
-Open **http://localhost:3000** in your browser.
+```bash
+# Local machine
+./start.sh
+
+# Remote host — pass the hostname so the browser finds the backend
+./start.sh --host myserver.example.com
+./start.sh --host 192.168.1.50
+
+# Custom ports
+./start.sh --host myserver.example.com --backend-port 4001 --frontend-port 4000
+
+# Equivalent via environment variables
+HOST=myserver.example.com ./start.sh
+```
+
+The Vite dev server binds to `0.0.0.0` automatically when a `--host` other than localhost is used, making it reachable from other machines.
+
+Open **http://\<host\>:3000** in your browser.
 
 The SQLite database file (`backend/org_structure.db`) is created automatically on first run.
 

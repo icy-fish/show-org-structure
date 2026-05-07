@@ -12,7 +12,10 @@ node_modules/
 dist/
 build/
 
-# Environment files — commit .env (public defaults only), ignore secrets
+# Environment files
+# frontend/.env is committed (public dev defaults only)
+# Root .env is for local docker compose overrides — do not commit
+/.env
 .env.local
 .env.*.local
 
