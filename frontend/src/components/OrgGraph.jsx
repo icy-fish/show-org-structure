@@ -18,6 +18,14 @@ import DeptModal from './modals/DeptModal';
 import PersonModal from './modals/PersonModal';
 import RelationModal from './modals/RelationModal';
 import { deptApi, personApi, relationApi } from '../api';
+import {
+  DEPT_SPACING_X,
+  DEPT_START_X,
+  DEPT_TOP_Y,
+  computeSmartPosition,
+  buildPosMap,
+  rebalanceSiblings,
+} from '../deptLayout';
 
 const nodeTypes = { department: DeptNode, person: PersonNode };
 
@@ -51,11 +59,12 @@ function buildColorMap(departments) {
 
 function buildNodes(departments, persons) {
   const colorMap = buildColorMap(departments);
+  const posMap = buildPosMap(departments);
 
-  const deptNodes = departments.map((d, i) => ({
+  const deptNodes = departments.map(d => ({
     id: `dept-${d.id}`,
     type: 'department',
-    position: { x: d.pos_x || (i % 4) * 260 + 80, y: d.pos_y || Math.floor(i / 4) * 180 + 80 },
+    position: posMap[d.id] || { x: DEPT_START_X, y: DEPT_TOP_Y },
     data: {
       dept: d,
       color: colorMap[d.id] || DEPT_COLORS[0],
@@ -211,7 +220,15 @@ export default function OrgGraph({ org, onRefresh }) {
     if (modal.dept) {
       await deptApi.update(modal.dept.id, { ...data, pos_x: modal.dept.pos_x, pos_y: modal.dept.pos_y });
     } else {
-      await deptApi.create(data);
+      const newDept = await deptApi.create(data);
+      // Compute and persist a smart position so the new dept appears in the right place
+      const posMap = buildPosMap(departments);
+      const smartPos = computeSmartPosition(
+        { id: newDept.id, parent_dept_id: newDept.parent_dept_id },
+        departments,
+        posMap
+      );
+      await deptApi.updatePosition(newDept.id, smartPos.x, smartPos.y);
     }
     setModal(null);
     loadData();
@@ -219,7 +236,34 @@ export default function OrgGraph({ org, onRefresh }) {
 
   const handleDeleteDept = async (deptId) => {
     if (!window.confirm('Delete this department?')) return;
+
+    // Capture parent info before deleting so we can rebalance siblings
+    const deletedDept = departments.find(d => d.id === deptId);
     await deptApi.delete(deptId);
+
+    // Rebalance remaining siblings to close the gap symmetrically
+    if (deletedDept) {
+      const siblings = departments.filter(
+        d => d.parent_dept_id === deletedDept.parent_dept_id && d.id !== deptId
+      );
+      if (siblings.length > 0) {
+        // Determine the center x: use parent position if available, else centroid of siblings
+        let centerX;
+        const parentDept = deletedDept.parent_dept_id
+          ? departments.find(d => d.id === deletedDept.parent_dept_id)
+          : null;
+        if (parentDept) {
+          centerX = parentDept.pos_x;
+        } else {
+          const siblingXSum = siblings.reduce((sum, s) => sum + s.pos_x, 0);
+          centerX = Math.round(siblingXSum / siblings.length);
+        }
+
+        const rebalanced = rebalanceSiblings(siblings, centerX);
+        await Promise.all(rebalanced.map(r => deptApi.updatePosition(r.id, r.x, r.y)));
+      }
+    }
+
     setModal(null);
     loadData();
   };
