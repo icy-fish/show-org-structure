@@ -52,5 +52,7 @@ BACKEND_PID=$!
 (cd frontend && npm run dev -- --port "$FRONTEND_PORT" --host) &
 FRONTEND_PID=$!
 
-trap "kill $BACKEND_PID $FRONTEND_PID 2>/dev/null; exit 0" EXIT INT TERM
+printf '%s\n' "$BACKEND_PID" "$FRONTEND_PID" > .pids
+
+trap "kill $BACKEND_PID $FRONTEND_PID 2>/dev/null; rm -f .pids; exit 0" EXIT INT TERM
 wait

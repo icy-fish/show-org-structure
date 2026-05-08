@@ -19,6 +19,9 @@ build/
 .env.local
 .env.*.local
 
+# Runtime
+.pids
+
 # Logs
 *.log
 npm-debug.log*
